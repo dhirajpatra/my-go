@@ -40,7 +40,7 @@ func main() {
 	// need to check the container internal IP with docker inspect command
 	time.Sleep(5 * time.Second) // Wait for 5 seconds
 
-	db, err := Connect("root", "pass", "localhost", "test")
+	db, err := Connect("root", "pass", "localhost", "") // Connect without specifying database
 	if err != nil {
 		panic(err.Error())
 	}
@@ -51,4 +51,40 @@ func main() {
 		panic(err.Error())
 	}
 	fmt.Println("Database connection established!")
+
+	// Select the database
+	_, err = db.Exec("USE test")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// if database exists, drop it
+	err = DropDB(db, "test")
+	if err != nil {
+		panic(err.Error())
+	}
+	err = CreateDB(db, "test")
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("Database created!")
+
+	// Select the database
+	_, err = db.Exec("USE test")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// create a table
+	query := `create table employees (
+        id int,
+        name varchar(255),
+        age int,
+        salary int)`
+
+	err = CreateTable(db, query)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("Table created!")
 }
