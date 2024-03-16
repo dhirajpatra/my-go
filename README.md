@@ -102,7 +102,44 @@ Welcome to the world of Go (also known as Golang)! Whether you're a beginner or 
      ```
    - The executable will be named `myapp`.
 
-That's it! You're now ready to explore Go and build amazing applications. Happy coding! 🚀
+
+## Developing Go Microservices Application With Docker
+
+### Create MySql Container
+
+1. **Pull the MySQL Docker Image**:
+    - Open a command prompt or terminal.
+    - Pull the appropriate MySQL image using the following command:
+        ```
+        docker pull mysql/mysql-server:latest
+        ```
+        Replace `latest` with the specific version if you want a particular MySQL version.
+    - Create a docker volume
+      ```
+      docker volume create mysql-data
+      ```
+
+2. **Deploy the MySQL Container**:
+    - Deploy a new MySQL container using the following command:
+        ```
+        docker run -d --name my-mysql -e MYSQL_ROOT_PASSWORD=pass -p 3306:3306 -v mysql-data:/var/lib/mysql mysql:8.0
+        ```
+        Replace `my-mysql-container` with your preferred container name. If you don't provide a name, Docker generates a random one. The `-d` option runs the container as a service in the background.
+
+3. **Connect to the MySQL Container**:
+    - To access the MySQL container, use the following command:
+        ```
+        docker exec -it my-mysql-container mysql -uroot -p
+        ```
+        You'll be prompted to enter the MySQL root password (which you set during container deployment).
+    - To know the IP address of the my-mysql-container, use the following command:
+        ```
+        docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-mysql
+        ```
+
+
+
+### Some more links to learn Go
 
 Source: Conversation with Bing, 14/3/2024
 (1) How to run a Golang Program? - TutorialKart. https://www.tutorialkart.com/golang-tutorial/run-go-program/.
