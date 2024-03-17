@@ -1,0 +1,48 @@
+// Package main implements a simple TODO list web application.
+package main
+
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+)
+
+// todo represents a single TODO item with a title and done status.
+type todo struct {
+	Title string
+	Done  bool
+}
+
+// TodoPageData contains the data needed to render the TODO list page.
+type TodoPageData struct {
+	PageTitle string
+	Todos     []todo
+}
+
+func main() {
+	// Parse the HTML template file.
+	tmpl := template.Must(template.ParseFiles("layout.html"))
+
+	// static files
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// Define the handler for the root URL.
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Create the data to be passed to the template.
+		data := TodoPageData{
+			PageTitle: "My TODO list",
+			Todos: []todo{
+				{Title: "Task 1", Done: false},
+				{Title: "Task 2", Done: true},
+				{Title: "Task 3", Done: true},
+			},
+		}
+		// Execute the template with the data and write the result to the response.
+		tmpl.Execute(w, data)
+	})
+
+	// Start the HTTP server and listen for incoming requests.
+	fmt.Println("Server started on port 80")
+	http.ListenAndServe(":80", nil)
+}
