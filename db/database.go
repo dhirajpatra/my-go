@@ -98,7 +98,7 @@ func main() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL,
         password VARCHAR(255) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );`
 
 	err = CreateTable(db, query)
@@ -106,5 +106,64 @@ func main() {
 		panic(err.Error())
 	}
 	fmt.Println("Table created!")
+
+	// create new user
+	username := "dhirajpatra"
+	password := "password"
+	createdAt := time.Now()
+
+	// insert user into database
+	result, err := db.Exec("INSERT INTO users (username, password, createdAt) VALUES (?, ?, ?)", username, password, createdAt)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	userID, err := result.LastInsertId()
+
+	if err != nil {
+		panic(err.Error())
+	} else {
+		fmt.Println("User inserted! New user id is ", userID)
+	}
+
+	// call all users
+	type user struct {
+		id        int
+		username  string
+		password  string
+		createdAt time.Time
+	}
+
+	rows, err := db.Query("SELECT id, username, password, created_at FROM users")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer rows.Close()
+
+	var users []user
+	for rows.Next() {
+		var u user
+		err := rows.Scan(&u.id, &u.username, &u.password, &u.createdAt)
+		if err != nil {
+			panic(err.Error())
+		}
+		users = append(users, u)
+	}
+	if err := rows.Err(); err != nil {
+		panic(err.Error())
+	}
+
+	fmt.Println("All users:")
+	for _, u := range users {
+		fmt.Printf("ID: %d, Username: %s, Password: %s, Created At: %s\n", u.id, u.username, u.password, u.createdAt)
+	}
+
+	// delete a user
+	_, err = db.Exec("DELETE FROM users WHERE id = ?", userID)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println("User deleted!")
+
 	db.Close()
 }
