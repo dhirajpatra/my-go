@@ -37,6 +37,7 @@ func main() {
 	// Configure database connection
 	time.Sleep(5 * time.Second) // Wait for 5 seconds
 
+	// my-mysql container connection details
 	db, err := Connect("root", "pass", "localhost", "test")
 	if err != nil {
 		panic(err.Error())
@@ -69,6 +70,7 @@ func main() {
 	var employees []Employee
 	for rows.Next() {
 		var e Employee
+		// read the values from the current row in the result set and store them into the specified variables reference
 		err := rows.Scan(&e.ID, &e.Name, &e.Salary, &e.City, &e.State, &e.Country)
 		if err != nil {
 			panic(err.Error())
