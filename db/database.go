@@ -35,6 +35,19 @@ func DropDB(db *sql.DB, name string) error {
 	return err
 }
 
+// Check if database exists
+func CheckDBExists(db *sql.DB, name string) (bool, error) {
+	var result string
+	err := db.QueryRow("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", name).Scan(&result)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil // Database doesn't exist
+		}
+		return false, err // Other error occurred
+	}
+	return true, nil // Database exists
+}
+
 func main() {
 	// Configure database connection (always check error)
 	// need to check the container internal IP with docker inspect command
@@ -52,16 +65,19 @@ func main() {
 	}
 	fmt.Println("Database connection established!")
 
-	// Select the database
-	_, err = db.Exec("USE test")
+	// Check if database exists
+	exists, err := CheckDBExists(db, "test")
 	if err != nil {
 		panic(err.Error())
 	}
 
-	// if database exists, drop it
-	err = DropDB(db, "test")
-	if err != nil {
-		panic(err.Error())
+	// If database exists, drop it
+	if exists {
+		err = DropDB(db, "test")
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Println("Database dropped!")
 	}
 	err = CreateDB(db, "test")
 	if err != nil {
@@ -131,10 +147,10 @@ func main() {
 		id        int
 		username  string
 		password  string
-		createdAt time.Time
+		createdAt string
 	}
 
-	rows, err := db.Query("SELECT id, username, password, created_at FROM users")
+	rows, err := db.Query("SELECT id, username, password, createdAt FROM users")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -147,6 +163,18 @@ func main() {
 		if err != nil {
 			panic(err.Error())
 		}
+		// Parse the createdAt string from the database into a time.Time object.
+		// The layout parameter "2006-01-02 15:04:05" defines the expected format of the createdAt string.
+		// The layout follows the reference time "Mon Jan 2 15:04:05 MST 2006", as specified in the Go documentation.
+		// The values in the layout represent the year (2006), month (01), day (02), hour (15, in 24-hour format), minute (04), second (05).
+		// The time.Parse function returns a time.Time object representing the parsed time.
+		// If the parsing fails due to an invalid format, it returns an error.
+		createdAtTime, err := time.Parse("2006-01-02 15:04:05", u.createdAt)
+
+		if err != nil {
+			panic(err.Error())
+		}
+		u.createdAt = createdAtTime.String() // Convert back to string if needed
 		users = append(users, u)
 	}
 	if err := rows.Err(); err != nil {
