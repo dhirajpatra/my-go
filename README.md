@@ -36,6 +36,8 @@ Welcome to the world of Go (also known as Golang)! Whether you're a beginner or 
    - Run the following command to create a `go.mod` file:
      ```bash
      go mod init hello
+     or
+     go get modname
      ```
 
 3. **Write Your First Go Program**:
