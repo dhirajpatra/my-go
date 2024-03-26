@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Create a new websocket.Upgrader to upgrade HTTP connections to WebSocket connections.
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -16,14 +17,20 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+var clients = make(map[*websocket.Conn]bool) // connected clients
+var broadcast = make(chan []byte)            // broadcast channel
+
 func main() {
+	// Handle WebSocket connections to the /echo endpoint
 	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
-		conn, err := upgrader.Upgrade(w, r, nil) // error ignored for sake of simplicity
+		// Upgrade HTTP connection to WebSocket
+		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
+		// Continuously read and write messages
 		for {
 			// Read message from browser
 			msgType, msg, err := conn.ReadMessage()
@@ -41,9 +48,11 @@ func main() {
 		}
 	})
 
+	// Serve the websockets.html file at the root endpoint
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "websockets.html")
 	})
 
+	// Start the HTTP server listening on port 8080
 	http.ListenAndServe(":8080", nil)
 }
